@@ -15,10 +15,10 @@ Vector::~Vector() {
 	delete[] data;
 }
 
-int Vector::get_size() {
+int Vector::get_size() const {
 	return size;
 }
-double Vector::get_data(int i) {
+double Vector::get_data(int i) const {
 	return data[i];
 }
 void Vector::set_data(int i, double val) {
@@ -35,7 +35,7 @@ void Vector::vec_assemble(double* vals) {
 	}
 }
 
-double Vector::operator * (Vector& v2) {
+double Vector::operator * (const Vector& v2) const {
 	if (size != v2.get_size()) {
 		std::cout << "vector multiplication failed, because vectors dont have same size" << std::endl;
 		exit(0); //maybe return is better
@@ -48,9 +48,27 @@ double Vector::operator * (Vector& v2) {
 	return sum;
 }
 
+Vector Vector::operator - (const Vector& v2) const {
+	if (size != v2.get_size()) {
+		std::cout << "\ntrying to subtract vectors of different size\n";
+		exit(0);
+	}
+	Vector res(size);
+	double* res_data = new double[size];
+	if (res_data == NULL) {
+		std::cout << "\nin operator : failed to allocate memory for entry array of result vector\n";
+		exit(0);
+	}
+	for (int i = 0; i < size; i++) {
+		res_data[i] = data[i] - v2.get_data(i);
+	}
+	res.vec_assemble(res_data);
+	delete[] res_data;
+	return res;
+}
 
 
-void Vector::print_vector() {
+void Vector::print_vector() const {
 	for (int i = 0; i < size; i++) {
 		std::cout << "\n" << data[i];
 	}

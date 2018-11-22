@@ -15,7 +15,7 @@ int main() {
 
 	Vector a(3), b(3);
 	double valsa[6] = { 0,0,0 };
-	double valsb[6] = { 7,7,7 };
+	double valsb[6] = { 9,9,9 };
 	a.vec_assemble(valsa);
 	b.vec_assemble(valsb);
 	A.gs_solve(a, b);

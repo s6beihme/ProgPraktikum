@@ -6,11 +6,12 @@ public:
 	Vector(int _size);
 	~Vector();
 	void vec_assemble(double* vals);
-	double operator * (Vector& v2);
-	void print_vector();
+	double operator * (const Vector& v2) const;
+	Vector operator - (const Vector&v2) const;
+	void print_vector() const;
 
-	int get_size();
-	double get_data(int i);
+	int get_size() const;
+	double get_data(int i) const;
 	void set_data(int i, double val);
 
 private:

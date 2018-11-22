@@ -4,14 +4,16 @@ class CsrMatrix {
 public:
 	CsrMatrix(int rows, int cols, int _nnz);
 	~CsrMatrix();
-	void print_csr_matrix();
-	int get_row_count();
-	int get_col_count();
-	int get_nnz();
-	double get_entr(int i);
+	void print_csr_matrix() const;
+	int get_row_count() const;
+	int get_col_count() const;
+	int get_nnz() const;
+	double get_entr(int i) const;
 	void csr_assemble(double* vals, int* row_inds, int*col_inds, int nnz);
-	void mat_vec_multiply(Vector &v, Vector& res);
-	void gs_solve(Vector& b, Vector& u);
+	Vector operator *(const Vector &v) const; //FRAGEN: ALS OPERATOR ÜBERLADEN UND VECTOR RETURNEN?
+	void gs_solve(Vector& u, const Vector& b) const;
+	CsrMatrix inv_diagonal() const;
+	Vector CG_Jac_prec(const Vector b, Vector x0);
 private:
 	int nnz;
 	int row_count;

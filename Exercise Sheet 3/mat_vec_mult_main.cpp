@@ -11,12 +11,13 @@ int main() {
 	A.csr_assemble(valsm, row, c, 19);
 	A.print_csr_matrix();
 
-	Vector v(6),r(6);
+	Vector v(6),r(9);
 	double valsv[6] = { 1,1,0,0,0,0 };
 	v.vec_assemble(valsv);
 	v.print_vector();
-	A.mat_vec_multiply(v, r);
+	r = A * v;
 	std::cout << "A*v:\n";
 	r.print_vector();
+	std::cout << "\nFinished\n";
 	return 0;
 }

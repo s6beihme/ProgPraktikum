@@ -39,21 +39,21 @@ CsrMatrix::~CsrMatrix() {
 }
 
 
-int CsrMatrix::get_row_count() {
+int CsrMatrix::get_row_count() const {
 	return row_count;
 }
-int CsrMatrix::get_col_count() {
+int CsrMatrix::get_col_count() const {
 	return col_count;
 }
-int CsrMatrix::get_nnz() {
+int CsrMatrix::get_nnz() const {
 	return nnz;
 }
-double CsrMatrix::get_entr(int i) {
+double CsrMatrix::get_entr(int i) const {
 	return entr[i];
 }
 
 
-void CsrMatrix::print_csr_matrix() {
+void CsrMatrix::print_csr_matrix() const {
 	std::cout << "\nThe entries of the Matrix are:\n";
 	for (int i = 0; i < nnz; i++) {
 		std::cout << "\n" << entr[i] << ", in column:" << col_ind[i];
@@ -98,13 +98,10 @@ void CsrMatrix::csr_assemble(double* vals, int* row_inds, int*col_inds, int _nnz
 }
 
 
-void CsrMatrix::mat_vec_multiply(Vector &v, Vector& res) {
+Vector CsrMatrix::operator *(const Vector &v) const {
 	if (col_count != v.get_size()) {
 		std::cout << "\nMatrix Vector multiplication failed bacause dimension of first argument didnt correspond to matrix" << std::endl;
 		exit(0);
-	}
-	if (row_count != res.get_size()) {
-		std::cout << "\nMatrix Vector multiplication failed, because dimension of second argument didnt correspond to matrix" << std::endl;
 	}
 
 	double* res_vals = new double[row_count];
@@ -116,11 +113,13 @@ void CsrMatrix::mat_vec_multiply(Vector &v, Vector& res) {
 		}
 		res_vals[i] = sum;
 	}
+	Vector res(row_count);
 	res.vec_assemble(res_vals);
 	delete[] res_vals;
+	return res;
 }
 
-void CsrMatrix::gs_solve(Vector& u, Vector& b) {
+void CsrMatrix::gs_solve(Vector& u,const Vector& b) const {
 	Vector Au(b.get_size());
 
 	double norm_res = 0;
@@ -156,7 +155,8 @@ void CsrMatrix::gs_solve(Vector& u, Vector& b) {
 			u.set_data(i, (1 / aii)*(b.get_data(i) - sum));
 		}
 		norm_res = 0;
-		mat_vec_multiply(u, Au); //is the function callable like this?
+		Au = (*this)*u;
+		//mat_vec_multiply(u, Au); //is the function callable like this?
 		for (int i = 0; i < b.get_size(); i++) {
 			norm_res += (Au.get_data(i) - b.get_data(i))*(Au.get_data(i) - b.get_data(i));
 		}
@@ -165,3 +165,59 @@ void CsrMatrix::gs_solve(Vector& u, Vector& b) {
 	}
 }
 
+// 
+CsrMatrix CsrMatrix::inv_diagonal() const {
+	if (row_count != col_count) {
+		std::cout << "Matrix has to be square!\n";
+		exit(0); //WAS GIBT ES BESSERES ALS EXIT 0?
+	}
+	double* diag_entr = new double[row_count];
+	if (diag_entr == NULL) {
+		std::cout << "inv_diagonal failed to allocate memory\n";
+		exit(0);
+	}
+	int* cols = new int[row_count];
+	if (cols == NULL) {
+		std::cout << "inv_diagonal failed to allocate memory\n";
+		delete[] diag_entr;
+		exit(0);
+	}
+
+	//set rows and cols
+	for (int i = 0; i < row_count; i++) {
+		cols[i] = i;
+	}
+
+	double aii = 0;
+	//go throgh rows and set diag_entr to inverse of diagonal entries of Matrix
+	for (int i = 0; i < row_count; i++) {
+		aii = 0;
+		for (int j = new_row_ind[i]; j < new_row_ind[i + 1]; j++) {
+			if (col_ind[j] == i) {
+				aii = entr[j];
+				break;
+			}
+		}
+		if (aii == 0) {
+			std::cout << "\nNo diagonal entry in row " << i << std::endl;
+			exit(0);
+		}
+		diag_entr[i] = 1 / aii;
+	}
+	CsrMatrix inv_diag_mat(row_count, col_count, row_count);
+
+	//row indices and column indices are the same
+	inv_diag_mat.csr_assemble(diag_entr, cols, cols, row_count);
+	delete[] diag_entr;
+	delete[] cols;
+	//inv_diag_mat.print_csr_matrix(); //printing here yields correct result
+	return inv_diag_mat;
+}
+
+Vector CsrMatrix::CG_Jac_prec(const Vector b, Vector x0) {
+	Vector r0(0), p0(0);
+	CsrMatrix Minv(0, 0, 0);
+	Minv = (*this).inv_diagonal();
+	r0 = (b - (*this)*x0);
+
+}
