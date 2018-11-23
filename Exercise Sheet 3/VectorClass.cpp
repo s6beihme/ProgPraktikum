@@ -4,30 +4,14 @@
 
 Vector::Vector(int _size) {
 	size = _size;
-	data = new double[size];
-	if (data == NULL) {
-		std::cout << "Vector Constructor failed. allocating memory for data failed" << std::endl;
-		return;
-	}
+	data = std::make_unique<double[]>(size);
 }
 
 Vector::~Vector() {
-	delete[] data;
+	data.release();
 }
 
-int Vector::get_size() const {
-	return size;
-}
-double Vector::get_data(int i) const {
-	return data[i];
-}
-void Vector::set_data(int i, double val) {
-	if (i < 0 || i >= size) {
-		std::cout << "\nset_data failed, index out of bound\n";
-		return;
-	}
-	data[i] = val;
-}
+
 
 void Vector::vec_assemble(double* vals) {
 	for (int i = 0; i < size; i++) {
@@ -48,23 +32,25 @@ double Vector::operator * (const Vector& v2) const {
 	return sum;
 }
 
-Vector Vector::operator - (const Vector& v2) const {
+void Vector::add_vect(const Vector& v2, Vector& result) const {
+	if (size != v2.get_size()) {
+		std::cout << "\ntrying to subtract vectors of different size\n";
+		return;
+	}
+	for (int i = 0; i < size; i++) {
+		result.set_data(i, data[i] + v2.get_data(i));
+	}
+}
+
+void Vector::subtr_vect (const Vector& v2, Vector& result) const {
 	if (size != v2.get_size()) {
 		std::cout << "\ntrying to subtract vectors of different size\n";
 		exit(0);
 	}
-	Vector res(size);
-	double* res_data = new double[size];
-	if (res_data == NULL) {
-		std::cout << "\nin operator : failed to allocate memory for entry array of result vector\n";
-		exit(0);
-	}
+	
 	for (int i = 0; i < size; i++) {
-		res_data[i] = data[i] - v2.get_data(i);
+		result.set_data(i, data[i] - v2.get_data(i));
 	}
-	res.vec_assemble(res_data);
-	delete[] res_data;
-	return res;
 }
 
 
@@ -74,3 +60,43 @@ void Vector::print_vector() const {
 	}
 	std::cout << std::endl;
 }
+
+long double Vector::norm_squared() const {
+	long double res = 0;
+	for (int i = 0; i < size; i++) {
+		res += data[i] * data[i];
+	}
+	return res;
+}
+
+int Vector::get_size() const {
+	return size;
+}
+double Vector::get_data(int i) const {
+	return data[i];
+}
+void Vector::set_data(int i, double val) {
+	if (i < 0 || i >= size) {
+		std::cout << "\nset_data failed, index out of bound\n";
+		return;
+	}
+	data[i] = val;
+}
+
+void Vector::make_copy(Vector& v2) const {
+	if (size != v2.get_size()) {
+		std::cout << "\nmake copy failed, because size of argument didnt fit\n";
+		return;
+	}
+	for (int i = 0; i < size; i++) {
+		v2.set_data(i, data[i]);
+	}
+}
+
+void scalar_mult(double a, const Vector& v, Vector& result) {
+
+	for (int i = 0; i < v.get_size(); i++) {
+		result.set_data(i, a * v.get_data(i));
+	}
+}
+
