@@ -115,11 +115,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Exercise_24_a.cpp" />
+    <ClCompile Include="CsrMatrixClass.cpp" />
+    <ClCompile Include="gs_small_main.cpp" />
+    <ClCompile Include="mat_vec_mult_main.cpp" />
+    <ClCompile Include="testing.cpp" />
     <ClCompile Include="Vector.cpp" />
+    <ClCompile Include="VectorClass.cpp" />
+    <ClCompile Include="vector_multipl_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CsrMatrixClass.h" />
     <ClInclude Include="Vector.h" />
+    <ClInclude Include="VectorClass.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
