@@ -1,12 +1,22 @@
 #pragma once
 #include <iostream>
 #include <memory>
+#include <string>
 class Vector {
 public:
-	//allocates memory for Vector type object
+	//allocates memory for Vector type object and fills data with zeros
 	//parameters:
 		//_size: size of vector;
 	Vector(int _size);
+
+	//creates vector from given file
+	//parameters:
+		//filename: file representing vector in format:
+			//line 1:	  size
+			//line 2:	  data
+			//...
+			//line size+1:data
+	Vector(std::string filename);
 	~Vector();
 
 	//fills this->data with given values (Note that this function doesnt check for correct size of argument)

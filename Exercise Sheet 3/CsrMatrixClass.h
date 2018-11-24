@@ -1,5 +1,11 @@
 #pragma once
 #include "VectorClass.h"
+#include <string>
+
+
+//about the Solvers: gaus seidel yields reasonable results most constantly (compared to the others)
+
+
 class CsrMatrix {
 public:
 	//allocates memory for CsrMatrix object
@@ -8,6 +14,17 @@ public:
 		//cols: -"- cols -"-
 		//nnz: number of non-zero entries in matrix
 	CsrMatrix(int rows, int cols, int _nnz);
+
+	//reades Matrix from a file and creates matrix object accordingly
+	//file has to be in following format:
+		//line 1:	 row_count col_count nnz
+		//line 2:	 row column entry
+		//line 3:	 row column entry
+		//...
+		//line nnz+1:row column entry 
+	//parameters:
+		//filename: name of file in which matrix is written
+	CsrMatrix(std::string filename);
 
 	~CsrMatrix();
 
@@ -34,12 +51,6 @@ public:
 		//result: functions fills result vector with (*this)*v
 	void mat_vec_mult(const Vector &v, Vector& result) const; 
 	
-	//solves Linear system of Equations Au=b for x using gauss seidel iteration
-	//parameters:
-		//result: initial guess vector of result. it will be overwritten with the result
-		//b: right hand side vector of Equation
-	void gs_solve(const Vector& b, Vector& result) const;
-
 
 	//solves linear system of equations Mx=b for x algebraically where M is diagonal part of (*this)
 	//parameters:
@@ -47,8 +58,19 @@ public:
 		//result: is filled with result such that M*result=b
 	void solve_only_diag(const Vector& b, Vector& result) const;
 
+	//solves linear system of equations Mx=b for x algebraically where M is upper triagonal part of (*this)
+	//parameters:
+		//b: right hand side vector of equation
+		//result: is filled with result such that M*result=b
+	void solve_only_upper_triang(const Vector& b, Vector& result);
 	//solves linear system of equations Mx=b for x algebraically where M is the upper triangular part of (*this)
 	//Vector solve_only_upper_triang(const Vector& b);
+
+	//solves Linear system of Equations Au=b for x using gauss seidel iteration
+	//parameters:
+		//result: initial guess vector of result. it will be overwritten with the result
+		//b: right hand side vector of Equation
+	void gs_solve(const Vector& b, Vector& result) const;
 
 	//solves linear system of equations Ax=b for x using preconditioned Conjugate Gradient Method
 	//parameters:
@@ -56,7 +78,15 @@ public:
 		//x0: initial guess. result will be stored in here
 		//preconditioner: if =0 then uses Jacobi preconditioner, if =1 uses gauss seidel preconditioner
 	//returns: Vector type object x that satisfies Ax=b
-	void CG_prec(const Vector& b, Vector& x0);
+	void CG_prec(const Vector& b, Vector& x0, int preconditioner);
+
+	//solves linear system of equations Ax=b for x using preconditioned Richardson Method (gamma_n=1 for all n)
+	//parameters:
+		//b: right hand side vector of equation
+		//x0: initial guess. result will be stored in here
+		//preconditioner: if =0 then uses Jacobi preconditioner, if =1 uses gauss seidel preconditioner
+	//returns: Vector type object x that satisfies Ax=b
+	void Richardson_prec(const Vector& b, Vector& x0, int preconditioner);
 	 
 private:
 	int nnz;

@@ -1,10 +1,34 @@
 #include "VectorClass.h"
 #include <iostream>
-
+#include <fstream>
+#include <string>
 
 Vector::Vector(int _size) {
 	size = _size;
 	data = std::make_unique<double[]>(size);
+	for (int i = 0; i < size; i++) {
+		data[i] = 0;
+	}
+}
+
+Vector::Vector(std::string filename) {
+	std::ifstream myFile;
+	myFile.open(filename);
+	if (myFile.is_open() == false) {
+		std::cout << "\nfailed to open file!\n";
+		exit(0);
+	}
+	
+	myFile >> size;
+	if (size < 0) {
+		std::cout << "first entry of file representing vector is the size. it has to be >= 0";
+		exit(0);
+	}
+	data = std::make_unique<double[]>(size);
+	for (int i = 0; i < size; i++) {
+		myFile >> data[i];
+	}
+	myFile.close();
 }
 
 Vector::~Vector() {
@@ -55,6 +79,7 @@ void Vector::subtr_vect (const Vector& v2, Vector& result) const {
 
 
 void Vector::print_vector() const {
+	std::cout << "\nEntries of vector are:\n";
 	for (int i = 0; i < size; i++) {
 		std::cout << "\n" << data[i];
 	}
