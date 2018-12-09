@@ -185,7 +185,7 @@ void CsrMatrix::gs_solve(const Vector& b, Vector& result) const {
 		mat_vec_mult(result, Au);
 		Au.subtr_vect(b, residual);
 		norm_res = residual.norm_squared();
-		std::cout << "iteration " << iter << ", norm residual: " << norm_res << std::endl;
+		//std::cout << "iteration " << iter << ", norm residual: " << norm_res << std::endl;
 		
 		if (norm_res < 1e-10) {
 			std::cout << "\ngs_solve finished in iteration " << iter << std::endl;

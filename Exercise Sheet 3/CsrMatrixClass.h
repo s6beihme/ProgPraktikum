@@ -3,7 +3,7 @@
 #include <string>
 
 
-//about the Solvers: gaus seidel yields reasonable results most constantly (compared to the others)
+//about the Solvers: gaus seidel yields reasonable results most constantly (compared to the otherss)
 
 
 class CsrMatrix {
