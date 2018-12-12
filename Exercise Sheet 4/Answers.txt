@@ -1,0 +1,5 @@
+28 a)
+the Classes were not regular. basically all neccessary funtions didnt exist
+
+28 c)
+the regularity of Vector really only effects the solvers a little bit with code that is somewhat more readable.
