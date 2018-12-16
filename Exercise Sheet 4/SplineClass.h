@@ -12,30 +12,74 @@
 template <typename T, int Dim>
 class Spline {
 public:
+	//Default constructor: initializes private integrer variables with 0
 	Spline();
+
+	//copy constructor: makes (*this) a copy of other
+	//parameters:
+		//other: Spline type object with same template arguments
 	Spline(const Spline& other);
+
+	//initializes Spline (number of knots can be computed using degree and number of controll points)
+	//parameters:
+		//deg: degree of spline
+		//_num_ctrpts: number of controll points of spline
 	Spline(int deg, int _num_ctrpts);
+
+	//assembles existing Spline with given values (necessary:_num_knots == this->num_knots and _num_ctrpts == this->num_ctrpts)
+	//parameters:
+		//_num_knots: number of elements in T* _knots
+		//_num_ctrpts: number of elements of type T* in T** _ctrpts
+		//_knots: array of values of type T that are written into the middle entries this->knots. Should be non decreasing. it doesnt contain the "buffers" that will be in this->knots
+		//_ctrpts: "matrix" of values in format: (_num_ctrpts)*(Dim) that are written into this->ctrpts
 	void assemble(int _num_knots, int _num_ctrpts, int _Dim, T* _knots, T** _ctrpts);
 
+	//assignment operator
+	//parameters:
+		//other: Spline type object that has to have same template arguments as *this. otherwise it can be completely different. (*this) will become a copy of other
+	//output: 
 	Spline& operator = (const Spline& other);
 	
+	//only valid if other has same template arguments
 	bool operator ==(const Spline& other);
 	bool operator !=(const Spline& other);
 
 
-	//only with knots in [0,1]
+	//if ... t0, t1, t2, ... are the knots, it finds i such that x is in [t_i, t_(i+1)) (or x in [t_i, t_(i+1)], if that is the last intervall
+	//in the part of the knotvector, that doesnt contain the "buffer" on each end)
 	int find_intervall(T x);
+
+	//evaluates Spline curve at position x and writes the result into result
 	void de_boor(T x, std::vector<T>& result); 
+
+	//evaluates the Spline curve C at n equally spaced points (x1, ... , xn) in [0,1] (including 0 and 1) and writes the result into the file filename
+	//in the format:
+	//line 1:Dim
+	//line 2:C(x1)
+	//...
+	//line n+1: C(xn)
 	void write_to_file(std::string filename, int n);
 
+	//creates the interpolation parameters from the interpolation points (inter_pts) and writes the result into res
+	//formula from exercise sheet 3 Exercise 27
+	//to be used in create_ctrpts_from_inter_pts
 	void create_interpol_parameters(std::vector<std::vector<T>>& inter_pts, std::vector<T>& res, int num_pts);
+
+	//creates knots according to formula from exercise sheet 3 Exercise 27 using the already computed interpolation parameters (param)
+	//it writes the knots into this->knots.
+	//it also uses degree for the formula and writes degree into this->degree
+	//to be used in create_ctrpts_from_inter_pts
 	void create_knots(std::vector<T>& param, int num_inter_pts, int degree);
 	void print_knots();
+
+	//evaluates the i'th Basis spline of same degree as spline at position x. Formula from the NURBS  book
+	//to be used in create_ctrpts_from_inter_pts
 	T eval_bspline(T x, int i);
+
+	//creates the controll points using the interpolation points (inter_pts) for the spline of degree _degree
 	void create_ctrpts_from_inter_pts(std::vector<std::vector<T>>& inter_pts, int num_pts, int _degree);
 
 private:
-	//
 	int degree;
 	int num_knots;
 	int num_ctrpts;
