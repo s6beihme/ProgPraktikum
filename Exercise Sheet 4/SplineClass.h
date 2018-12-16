@@ -4,7 +4,10 @@
 #include <string>
 #include <fstream>
 #include <cmath>
-
+#include <cassert>
+#include <vector>
+#include "VectorClass.h"
+#include "CsrMatrixClass.h"
 
 template <typename T, int Dim>
 class Spline {
@@ -19,17 +22,17 @@ public:
 	bool operator ==(const Spline& other);
 	bool operator !=(const Spline& other);
 
-	void f(int n);
 
 	//only with knots in [0,1]
 	int find_intervall(T x);
-	void de_boor(T x, std::unique_ptr<T[]>& result); //warum muss result als referenz übergeben werden? ist doch ein pointer
+	void de_boor(T x, std::vector<T>& result); 
 	void write_to_file(std::string filename, int n);
 
-	void create_interpol_parameters(std::unique_ptr<std::unique_ptr<T[]>[]>& inter_pts, std::unique_ptr<T[]>& res, int num_pts);
-	void create_knots(std::unique_ptr<T[]>& param, int num_inter_pts, int degree);
+	void create_interpol_parameters(std::vector<std::vector<T>>& inter_pts, std::vector<T>& res, int num_pts);
+	void create_knots(std::vector<T>& param, int num_inter_pts, int degree);
 	void print_knots();
-	T eval_bspline(T x, int i, int _degree);
+	T eval_bspline(T x, int i);
+	void create_ctrpts_from_inter_pts(std::vector<std::vector<T>>& inter_pts, int num_pts, int _degree);
 
 private:
 	//
@@ -37,29 +40,24 @@ private:
 	int num_knots;
 	int num_ctrpts;
 	
-	std::unique_ptr<T[]> knots; //has length num_knots+2*degree
-	std::unique_ptr<std::unique_ptr<T[]>[]> ctrpts;
+	std::vector<T> knots; //has length num_knots+2*degree
+	std::vector<std::vector<T>> ctrpts;
 
 };
-
-template <typename T, int Dim>
-void Spline<T, Dim>::f(int n) {
-	knots = std::make_unique<T[]>(n);
-}
 
 
 template <typename T, int Dim>
 Spline<T, Dim>::Spline() :
-	degree(0), num_knots(0), num_ctrpts(0), knots(nullptr), ctrpts(nullptr)
+	degree(0), num_knots(0), num_ctrpts(0)
 {}
 
 template <typename T, int Dim>
-Spline<T, Dim>::Spline(const Spline& other) :
+Spline<T, Dim>::Spline(const Spline<T, Dim>& other) :
 	degree(other.degree), num_knots(other.num_knots), num_ctrpts(other.num_ctrpts)
 {
-	knots = std::make_unique<T[]>(num_knots+2*degree);
-	ctrpts = std::make_unique<std::unique_ptr<T[]>[]>(num_ctrpts);
-	for (int i = 0; i < num_ctrpts; i++) ctrpts[i] = std::make_unique<T[]>(Dim);
+	knots = std::vector<T>(num_knots+2*degree);
+	ctrpts = std::vector<std::vector<T>>(num_ctrpts);
+	for (int i = 0; i < num_ctrpts; i++) ctrpts[i] = std::vector<T>(Dim);
 
 	for (int i = 0; i < num_knots+2*degree; i++) knots[i] = other.knots[i];
 	for (int i = 0; i < num_ctrpts; i++) {
@@ -73,32 +71,21 @@ Spline<T, Dim>::Spline(int deg, int _num_ctrpts) :
 {
 	num_knots = _num_ctrpts + 1 - degree;
 	num_ctrpts = _num_ctrpts;
-	knots = std::make_unique<T[]>(num_knots+2*degree);
-	ctrpts = std::make_unique<std::unique_ptr<T[]>[]>(num_ctrpts);
-	for (int i = 0; i < num_ctrpts; i++) ctrpts[i] = std::make_unique<T[]>(Dim);
+	knots = std::vector<T>(num_knots+2*degree, 0);
+	ctrpts = std::vector<std::vector<T>>(num_ctrpts);
+	for (int i = 0; i < num_ctrpts; i++) ctrpts[i] = std::vector<T>(Dim, 0);
 
-	for (int i = 0; i < num_knots+2*degree; i++) knots[i] = 0;
-	for (int i = 0; i < num_ctrpts; i++) {
-		for (int j = 0; j < Dim; j++) ctrpts[i][j] = 0;
-	}
 }
 
 template <typename T, int Dim>
 void Spline<T, Dim>::assemble(int _num_knots, int _num_ctrpts, int _Dim, T* _knots, T** _ctrpts) {
-	if (_num_knots != _num_ctrpts + 1 - degree) {
-		std::cout << "number of ctr points, knots and the degree didnt correspond\n";
-		exit(0);
-	}
-	if (_num_knots != num_knots || _num_ctrpts != num_ctrpts || Dim!=_Dim) {
-		std::cout << "input sized didnt correspond with spline sizes\n";
-		exit(0);
-	}
+	assert(_num_knots == _num_ctrpts + 1 - degree);
+	assert(_num_knots == num_knots && _num_ctrpts != num_ctrpts && Dim != _Dim);
+
 	for (int i = 0; i < degree; i++) knots[i] = 0;
 	for (int i = degree; i < degree + num_knots; i++) {
-		if (_knots[i - degree] < 0 || _knots[i - degree] >1) {
-			std::cout << "_knots entry is out of bounds\n";
-			exit(0);
-		}
+		assert(_knots[i - degree] >= 0 && _knots[i - degree] <=1);
+		
 		knots[i] = _knots[i - degree];
 	}
 	for (int i = degree + num_knots; i < num_knots + 2 * degree; i++) knots[i] = 1;
@@ -113,9 +100,9 @@ Spline<T, Dim>& Spline<T, Dim>::operator=(const Spline<T, Dim>& other) {
 	num_ctrpts = other.num_ctrpts;
 	num_knots = other.num_knots;
 
-	knots = std::make_unique<T[]>(num_knots+2*degree);
-	ctrpts = std::make_unique<std::unique_ptr<T[]>[]>(num_ctrpts);
-	for (int i = 0; i < num_ctrpts; i++) ctrpts[i] = std::make_unique<T[]>(Dim);
+	knots = std::vector<T>(num_knots+2*degree);
+	ctrpts = std::vector<std::vector<T>>(num_ctrpts);
+	for (int i = 0; i < num_ctrpts; i++) ctrpts[i] = std::vector<T>(Dim);
 
 	for (int i = 0; i < num_knots+2*degree; i++) knots[i] = other.knots[i];
 	for (int i = 0; i < num_ctrpts; i++) {
@@ -156,13 +143,13 @@ int Spline<T, Dim>::find_intervall(T x) {
 }
 
 template <typename T, int Dim>
-void Spline<T,Dim>::de_boor(T x, std::unique_ptr<T[]>& result) {
+void Spline<T,Dim>::de_boor(T x, std::vector<T>& result) {
 	int k = find_intervall(x);
 	if (k == -1) return;
 	T alpha;
 
-	std::unique_ptr<std::unique_ptr<T[]>[]> d = std::make_unique<std::unique_ptr<T[]>[]>(degree + 1);
-	for (int i = 0; i < degree + 1; i++) d[i] = std::make_unique<T[]>(Dim);
+	std::vector<std::vector<T>> d(degree + 1);
+	for (int i = 0; i < degree + 1; i++) d[i] = std::vector<T>(Dim);
 
 	for (int j = 0; j < degree + 1; j++) {
 		for (int i = 0; i < Dim; i++) d[j][i] = ctrpts[j + k - degree][i];
@@ -186,7 +173,7 @@ void Spline<T, Dim>::write_to_file(std::string filename, int n) {
 		std::cout << "\nwrite to file failed: couldnt open file\n";
 		return;
 	}
-	std::unique_ptr<T[]> res = std::make_unique<T[]>(Dim);
+	std::vector<T> res(Dim);
 	myfile << Dim << "\n";
 	for (int i = 0; i < n-1; i++) {
 		de_boor(0 + (T)i / (T)n, res);
@@ -201,7 +188,7 @@ void Spline<T, Dim>::write_to_file(std::string filename, int n) {
 
 //to be used in interpolation
 template <typename T, int Dim>
-void Spline<T,Dim>::create_interpol_parameters(std::unique_ptr<std::unique_ptr<T[]>[]>& inter_pts, std::unique_ptr<T[]>& res, int num_pts) {
+void Spline<T,Dim>::create_interpol_parameters(std::vector<std::vector<T>>& inter_pts, std::vector<T>& res, int num_pts) {
 	T d = 0;
 	T r = 0;
 	res[0] = 0;
@@ -220,15 +207,15 @@ void Spline<T,Dim>::create_interpol_parameters(std::unique_ptr<std::unique_ptr<T
 	}
 }
 
-//sets num_knots, degree and creates knots
+//sets num_knots, degree, num_ctrpts and creates knots
 template <typename T, int Dim>
-void Spline<T, Dim>::create_knots(std::unique_ptr<T[]>& param, int num_inter_pts, int _degree) {
-	std::cout << "\nbeginning of CREATE KNOTS\n";
+void Spline<T, Dim>::create_knots(std::vector<T>& param, int num_inter_pts, int _degree) {
 	
 	T sum = 0;
+	num_ctrpts = num_inter_pts;
 	degree = _degree;
 	num_knots = num_inter_pts + 1 - _degree;
-	knots = std::make_unique<T[]>(num_knots+2*degree);
+	knots = std::vector<T>(num_knots+2*degree);
 	for (int i = 0; i <= degree; i++) knots[i] = 0;
 	for (int i = num_inter_pts; i <= num_inter_pts+degree+1; i++) knots[i] = 1;
 	for (int j = 1; j <= num_inter_pts - degree - 1; j++) {
@@ -237,54 +224,118 @@ void Spline<T, Dim>::create_knots(std::unique_ptr<T[]>& param, int num_inter_pts
 		knots[j + degree] = sum / degree;
 	}
 
-	std::cout << "\nend of CREATE KNOTS\n";
 	return;
 }
 
-template <typename T>
-int find_intervall2(T x, std::unique_ptr<T[]>& knots, int num_knots, int degree) {
-	if (num_knots <= 1) { std::cout << "less than two knots: cant find nonexistent intervall\n"; return -1; }
-
-	//we look for k such that 
-	//x in [t_k, t_k+1) (see De Boors algorithm)
-	if (x < 0 || x > 1) { std::cout << "x has to be in [0,1]\n"; return -1; }
-
-	//we let [t_(degree+num_nodes-2), 1] be a closed intervall, so we can evaluate the curve at 1
-	if (x == 1) return degree + num_knots - 2;
-
-	for (int k = degree; k < degree + num_knots; k++) {
-		if (knots[k] > x) return (k - 1);
-	}
-	return -1;
-}
 
 template <typename T, int Dim>
 void Spline<T, Dim>::print_knots() {
 	std::cout << "\nknots of spline are:\n";
-	for (int i = 0; i < num_knots + 2 * degree; i++) std::cout << knots[i] << ", ";
+	for (unsigned int i = 0; i < knots.size(); i++) std::cout << knots[i] << ", ";
 	std::cout << "\n";
 }
 
 
 //cox, de boor formula
 //evaluates B spline i of degree k at position x
+//needs knots and num_knots to be known
+//NOTE: i refers to knots[i]. so to get the first "real" knot, call with i=degree
 template <typename T, int Dim>
-T Spline<T, Dim>::eval_bspline(T x, int i, int k) { //Was ist wenn i quasi nicht mehr relevant ist?
-	std::cout << "\nbeginning EVAL BSPLINE\n";
-	if (k == 0) {
-		if (i == find_intervall(x)) return 1;
-		else return 0;
+T Spline<T, Dim>::eval_bspline(T x, int i) {
+	if ((i == 0 && x == knots[0]) || (i == num_knots + degree - 2 && x == knots[num_knots + 2 * degree - 1])) return 1;
+	if (x < knots[i] || x >= knots[i + degree + 1]) return 0;
+	if (i > num_knots + degree - 3) return 0;
+	
+	T saved = 0;
+	T temp = 0;
+	T Uleft = 0;
+	T Uright = 0;
+
+	std::vector<T> N(degree + 1);
+	for (int j = 0; j <= degree; j++) {
+		if (x >= knots[i + j] && x < knots[i + j + 1]) N[j] = 1;
+		else N[j] = 0;
 	}
-	T omega_ik;
-	T omega_iplus1k;
-	if (knots[i] != knots[i + k - 1]) omega_ik = (x - knots[i]) / (knots[i + k - 1] - knots[i]);
-	else omega_ik = 0;
-	if (knots[i + 1] != knots[i + k]) omega_iplus1k = (x - knots[i + 1]) / (knots[i + k] - knots[i + 1]);
-	else omega_iplus1k = 0;
-	
-	else return omega_ik*eval_bspline(x, i, _degree-1)+omega_iplus1k*eval_bspline(x, i+1, _degree-1);
-	
+	for (int k = 1; k <= degree; k++) {
+		if (N[0] == 0) saved = 0;
+		if (knots[i + k] == knots[i]) saved = 0;
+		else saved = ((x - knots[i])*N[0]) / (knots[i + k] - knots[i]);
+		for (int j = 0; j < degree - k + 1; j++) {
+			Uleft = knots[i + j + 1];
+			Uright = knots[i + j + k + 1];
+			if (N[j + 1] == 0) {
+				N[j] = saved;;
+				saved = 0;
+			}
+			else {
+				if (Uright != Uleft) temp = N[j + 1] / (Uright - Uleft);
+				else temp = 0;
+				N[j] = saved + (Uright - x)*temp;
+				saved = (x - Uleft)*temp;
+			}
+			
+		}
+	}
+	T result = N[0];
+	return result;
 }
 
+template <typename T, int Dim>
+void Spline<T, Dim>::create_ctrpts_from_inter_pts(std::vector<std::vector<T>>& inter_pts, int num_inter_pts, int _degree) {
+	
+	ctrpts = std::vector<std::vector<T>>(num_inter_pts);
+	for (int i = 0; i < num_inter_pts; i++) ctrpts[i] = std::vector<T>(Dim);
+
+	std::vector<T> parameters(num_inter_pts);
+	create_interpol_parameters(inter_pts, parameters, num_inter_pts);
+	std::cout << std::endl;
+	std::cout << std::endl;
+	create_knots(parameters, num_inter_pts, _degree);
+	//now degree, num_knots, num_ctrpts and knots are set
+
+	//check how many non zero entries matrix has
+	int nnz=0;
+	int num_entr_in_row = 0;
+	for(int k=0; k<num_ctrpts; k++) {
+		num_entr_in_row = 0;
+		for (int i = 0; i < num_ctrpts; i++) {
+			if (eval_bspline(parameters[k], i) != 0) {
+				nnz++;
+				num_entr_in_row++;
+				if (num_entr_in_row == degree + 1) break;
+			}
+		}
+	}
+
+	T* vals = new T[nnz];
+	int* row_inds = new int[nnz];
+	int* col_inds = new int[nnz];
+
+	//build matrix
+	int pos = 0;
+	for (int k = 0; k < num_ctrpts; k++) {
+		for (int i = 0; i < num_ctrpts; i++) {
+			if (eval_bspline(parameters[k], i) != 0) {
+				vals[pos] = eval_bspline(parameters[k], i);
+				col_inds[pos] = i;
+				row_inds[pos] = k;
+				pos++;
+			}
+		}
+	}
+
+	CsrMatrix<T> A(nnz, num_ctrpts, num_ctrpts);
+	A.assemble(vals, row_inds, col_inds, nnz);
+
+	Vector<T> temp_result(num_ctrpts), b(num_ctrpts);
+
+	//solve for each dimension
+	for (int i = 0; i < Dim; i++) {
+		for (int j = 0; j < num_ctrpts; j++) {b[j] = inter_pts[j][i];  }
+		A.gs_solve(b, temp_result);
+		for (int j = 0; j < num_ctrpts; j++) ctrpts[j][i] = temp_result[j];
+	}
+
+}
 
 

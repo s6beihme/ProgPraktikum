@@ -17,6 +17,9 @@ def plot_from_file(filename):
                 x_axis.append(float(temp[0]))
                 y_axis.append(float(temp[2]))
             plt.plot(x_axis, y_axis, label='B-Spline Curve')
+            x=[1,6,2,1.4,0]
+            y=[1,3,2,5.4,0]
+            plt.scatter(x,y)
             plt.legend()
             plt.show()
         if size==3:

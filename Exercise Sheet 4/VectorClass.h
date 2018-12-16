@@ -19,8 +19,9 @@ public:
 	bool operator !=(const Vector& other);
 	T& operator [] (int i);
 	T operator *(const Vector& other);
+	T norm_squared();
 	
-	int get_size();
+	int get_size() const;
 	
 	template <typename T2>
 	friend void add_vect (const Vector<T2>& v1, const Vector<T2>& v2, Vector<T2>& result);
@@ -28,8 +29,6 @@ public:
 	friend void subtr_vect (const Vector<T2>& v1, const Vector<T2>& v2, Vector<T2>& result);
 	template <typename T2>
 	friend std::ostream& operator << (std::ostream& out, const Vector<T2>& v);
-
-	
 
 private:
 	int size;
@@ -115,7 +114,7 @@ bool Vector<T>::operator !=(const Vector<T>& other) {
 
 template <typename T>
 T& Vector<T>::operator [] (int i) {
-	if (i<0 || i>size-1) { std::cout << "\nindex out of bounds"; exit(0); }
+	if (i<0 || i>size-1) { std::cout << "\nVector operator[] failed index out of bounds"; exit(0); }
 	return data[i];
 }
 
@@ -128,7 +127,16 @@ T Vector<T>::operator *(const Vector<T>& other) {
 }
 
 template <typename T>
-int Vector<T>::get_size() {
+T Vector<T>::norm_squared() {
+	T result = 0;
+	for (int i = 0; i < size; i++) {
+		result += data[i] * data[i];
+	}
+	return result;
+}
+
+template <typename T>
+int Vector<T>::get_size() const {
 	return size;
 }
 

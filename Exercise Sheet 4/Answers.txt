@@ -3,3 +3,36 @@ the Classes were not regular. basically all neccessary funtions didnt exist
 
 28 c)
 the regularity of Vector really only effects the solvers a little bit with code that is somewhat more readable.
+
+
+Exercise 31 c)
+public, protected and private inheritance:
+	Usually one would use public inheritance, but the other two exist, so you can make your classes save.
+	public: everything stays in the same "space" as it was before
+	protected: public becomes private, others remain the same.
+	private: everything becomes private
+
+Interface vs Implementation
+	Interface: only the declarations are inherited and what the function does has to be implemented. eg happens with abstract classes
+	Implementation: the implementation of the function is passed on, but it can be overwritten
+
+virtual and pure virtual:
+	when you declare a function as virtual and it is called, the implementation furthest down in the tree of inharitance is executed.
+	The use of this is that you can define it further down the tree according to the class, that inherits it, but if you use a pointer to
+	the base class, it is callable. If it is not pure virtual, you can define default behaviour.
+	A pure virtual function has no implementation and HAS to be defined by a class that inherits it. Classes that have a pure virtual
+	functin(or inherit it, without defining it) cannot be instantiated.
+
+Virtual destructor:
+	you use virtual destructors so that the destructor of the derived class is used and not only the destructor of the base class.
+	you use it when you have a derived class and especially when the derived class accumulates new data, that has to be deleted and when you
+	work with BaseClass-type pointers to derivedClass objects.
+	you use them to avoid memory leak and so you dont have undefined behaviour
+
+Abstract classes:
+	A class is abstract if it has at least one pure virtual function. It cannot be instantiated. It is used to have a general structure 
+	for derived classes.
+
+the override specifier:
+	specifies that a function is seen as virtual and the overwritten. As long as your code is correct, it has no effect. Therefore it is
+	basically only used for debugging
