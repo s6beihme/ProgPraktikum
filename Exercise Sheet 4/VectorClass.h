@@ -35,12 +35,16 @@ private:
 	std::unique_ptr<T[]> data;
 };
 
+// default construction
 template <typename T>
 Vector<T>::Vector() :
 	size(0),
 	data(nullptr)
 {}
 
+//allocates memory for Vector type object and fills data with zeros
+	//parameters:
+		//_size: size of vector;
 template <typename T>
 Vector<T>::Vector(int _size) :
 	size(_size)
@@ -51,6 +55,13 @@ Vector<T>::Vector(int _size) :
 	}
 }
 
+//creates vector from given file
+	//parameters:
+		//filename: file representing vector in format:
+			//line 1:	  size
+			//line 2:	  data
+			//...
+			//line size+1:data
 template <typename T>
 Vector<T>::Vector(std::string filename) {
 	std::ifstream myFile;
@@ -72,6 +83,7 @@ Vector<T>::Vector(std::string filename) {
 	myFile.close();
 }
 
+//copy construction
 template <typename T>
 Vector<T>::Vector(const Vector<T>& other) :
 	size(other.size)
@@ -82,6 +94,7 @@ Vector<T>::Vector(const Vector<T>& other) :
 	}
 }
 
+//copy assignment
 template <typename T>
 Vector<T>& Vector<T>::operator = (const Vector<T>& other) {
 	size = other.size;
@@ -92,11 +105,15 @@ Vector<T>& Vector<T>::operator = (const Vector<T>& other) {
 	return *this;
 }
 
+//fills this->data with given values (Note that this function doesnt check for correct size of argument)
+	//parameters:
+		//vals: array containing the values that should be stored in vector
 template <typename T>
 void Vector<T>::assemble(double* vals) {
 	for (int i = 0; i < size; i++) data[i] = vals[i];
 }
 
+// equality
 template <typename T>
 bool Vector<T>::operator ==(const Vector<T>& other) {
 	if (size != other.size) return false;
@@ -107,6 +124,7 @@ bool Vector<T>::operator ==(const Vector<T>& other) {
 	return true;
 }
 
+//inequality
 template <typename T>
 bool Vector<T>::operator !=(const Vector<T>& other) {
 	return !((*this) == other);
@@ -118,6 +136,10 @@ T& Vector<T>::operator [] (int i) {
 	return data[i];
 }
 
+//dot product of two vectors:
+	//parameters:
+		//v2: Vector with whicht to multiply (*this)
+	//returns: double value of dot product v2*(*this)
 template <typename T>
 T Vector<T>::operator *(const Vector<T>& other) {
 	if (size != other.size) { std::cout << "\nvector multiplication failed: sizes didnt correspond"; exit(0); }
@@ -126,6 +148,7 @@ T Vector<T>::operator *(const Vector<T>& other) {
 	return sum;
 }
 
+//squared norm of a vector
 template <typename T>
 T Vector<T>::norm_squared() {
 	T result = 0;
@@ -140,12 +163,20 @@ int Vector<T>::get_size() const {
 	return size;
 }
 
+//adds two vectors (doesnt change (*this))
+	//parameters:
+		//v2: vector to add with (*this)
+		//result: data of result gets overwritten with added data of (*this) and v2
 template <typename T>
 void add_vect(const Vector<T>& v1, const Vector<T>& v2, Vector<T>& result) {
 	if (v1.size != v2.size || v2.size != result.size) { std::cout << "\nadd_vects failed: vector sizes didnt correspond"; exit(0); }
 	for (int i = 0; i < v1.size; i++) result.data[i] = v1.data[i] + v1.data[i];
 }
 
+//subtracts two vectors (doesnt change (*this))
+	//parameters:
+		//v2: vector to subtract (*this)
+		//result: data of result gets overwritten with subtracted data of (*this) and v2
 template <typename T>
 void subtr_vect(const Vector<T>& v1, const Vector<T>& v2, Vector<T>& result) {
 	if (v1.size != v2.size || v2.size != result.size) { std::cout << "\nadd_vects failed: vector sizes didnt correspond"; exit(0); }
@@ -153,7 +184,7 @@ void subtr_vect(const Vector<T>& v1, const Vector<T>& v2, Vector<T>& result) {
 }
 
 template <typename T>
-std::ostream& operator << (std::ostream& out, const Vector<T>& v) { //binary operator, why this syntax?
+std::ostream& operator << (std::ostream& out, const Vector<T>& v) { 
 	out << "Vector of size " << v.size << ":\n";
 	for (int i = 0; i < v.size; i++) {
 		out << v.data[i] << ", ";
