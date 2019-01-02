@@ -4,5 +4,6 @@ Created on Wed Jan  2 15:16:40 2019
 
 @author: ASUS
 """
-a="abc"
-print(type(a))
+import numpy as np
+m=np.zeros([5,5],float)
+print(m)
