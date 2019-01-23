@@ -1,0 +1,3 @@
+C:/Users/ASUS/Documents/Studium/Prog Praktikum/Exercise Sheet 6/Paralelization/build/CMakeFiles/testing.dir
+C:/Users/ASUS/Documents/Studium/Prog Praktikum/Exercise Sheet 6/Paralelization/build/CMakeFiles/edit_cache.dir
+C:/Users/ASUS/Documents/Studium/Prog Praktikum/Exercise Sheet 6/Paralelization/build/CMakeFiles/rebuild_cache.dir
