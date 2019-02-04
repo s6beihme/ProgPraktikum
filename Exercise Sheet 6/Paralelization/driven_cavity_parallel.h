@@ -4,6 +4,24 @@
 #include "driven_cavity.h"
 
 
+//A few things regarding this programm:
+
+//Whenever I pass a T* row or T* column to a function, those arrays dont have to contain any
+//relevant data. They are only used a a container to use in MPI_Send or MPI_Recv and by passing
+//them, I avoid allocating memory for them in each call of one of the functions.
+//row has to have length jmax (the number of INNER columns of the matrix) and 
+//column has to have length imax (the number of INNER rows of the matrix)
+
+//When I pass int* coords or int* dims to a function, I assume that they have already been 
+//calculated in the main programm.
+
+//Same as in my last programm, imax and jmax are the number of the INNER rows and INNER columns respectively of the 
+//matrices, NOT the dimensions of the whole matrices.
+
+
+
+
+
 MPI_Datatype get_MPI_Datatype(double) {
 	return MPI_DOUBLE;
 }

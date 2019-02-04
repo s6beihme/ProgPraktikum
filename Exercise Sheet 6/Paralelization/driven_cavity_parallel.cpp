@@ -2,6 +2,21 @@
 #include "driven_cavity.h"
 
 
+//A few things regarding this programm:
+
+//for this programm to work, the dimensions of the global grid have to be divisible 
+//by the Dimensions calculated by MPI_Dims_create. To assure this, you should probably use
+//2^n or 3^n ... processors on a matrix of dimensions 2^m*2^m 3^m*3^m for m >= n.
+//if the Dimensions of the global grid are given, It might be neccesary to try different
+//numbers of processords until you find one, that works.
+//I think, that is the best and easyest solution to dividing up the global grid between a number of 
+//processords, because usually it shouldnt be a problem to slightly increase or decrease the dimensions 
+//of the global grid or the number of processors.
+
+//I call this program by compiling it with CMAKE and then executing
+//"mpiexec -n <number of processes> <executible> <name of input file> <Base name of output files>"
+//MPI init changes argc and argv a bit and afterwards argv[1] is <name of input file> and argv[2] is <Base name of output files>
+
 int main(int argc, char **argv) {
 	int  myrank, numberoftasks;
 	MPI_Comm cartesian_handle;
