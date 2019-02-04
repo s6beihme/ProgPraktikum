@@ -122,7 +122,7 @@ void receive_left_boundary_and_set_matrix(std::unique_ptr<std::unique_ptr<T[]>[]
 
 
 template <typename T>
-void exchange_boundary_values_UV_between_processes(MPI_Comm cartesian_handle ,std::unique_ptr<std::unique_ptr<T[]>[]>& U, std::unique_ptr<std::unique_ptr<T[]>[]>& V, T* column, T* row, int imax, int jmax, int*coords, int* dims) {
+void exchange_boundary_values_UV_or_FG_between_processes(MPI_Comm cartesian_handle ,std::unique_ptr<std::unique_ptr<T[]>[]>& U, std::unique_ptr<std::unique_ptr<T[]>[]>& V, T* column, T* row, int imax, int jmax, int*coords, int* dims) {
 	int target = 0;
 	int target_coords[2] = { 0,0 };
 	int source = 0;
@@ -767,5 +767,4 @@ void write_output_into_file_parallel(std::string filename, MPI_Comm cartesian_ha
 			if (myrank == rank_top_left) myfile << "\n";
 		}
 	}
-
 }

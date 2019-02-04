@@ -100,25 +100,25 @@ int main(int argc, char **argv) {
 	double* column = new double[imax];
 
 	initialize_fields_UVP<double>(imax, jmax, UI, VI, PI, U, V, P);
-	exchange_boundary_values_UV_between_processes(cartesian_handle, U, V, column, row, imax, jmax, coords, dims);
+	exchange_boundary_values_UV_or_FG_between_processes(cartesian_handle, U, V, column, row, imax, jmax, coords, dims);
 	double t = 0;
 
 	while (t < t_end) {
-		//write_output_into_file_parallel("file1", cartesian_handle, myrank, coords, dims, row, U, V, P, U2, V2, imax, jmax, imax_global, jmax_global, xlength, ylength);
+		
 		calculate_delt_parallel<double>(cartesian_handle, U, V, imax, jmax, tau, Re, delx, dely, myrank, delt);
-		apply_boundary_conditions_UV_on_outer_processes(U, V, imax, jmax, coords, dims);
-		exchange_boundary_values_UV_between_processes(cartesian_handle, U, V, column, row, imax, jmax, coords, dims);
-		//write_output_into_file_parallel("file2", cartesian_handle, myrank, coords, dims, row, U, V, P, U2, V2, imax, jmax, imax_global, jmax_global, xlength, ylength);
-		calculate_F_G_parallel(coords, dims, imax, jmax, delt, delx, dely, Re, alpha, GX, GY, U, V, F, G);
 
+		apply_boundary_conditions_UV_on_outer_processes(U, V, imax, jmax, coords, dims);
+
+		calculate_F_G_parallel(coords, dims, imax, jmax, delt, delx, dely, Re, alpha, GX, GY, U, V, F, G);
+		//exchange boundary values of F and G so the RHS will be computed correctly
+		exchange_boundary_values_UV_or_FG_between_processes(cartesian_handle, F, G, column, row, imax, jmax, coords, dims);
 		calculate_RHS(imax, jmax, delt, delx, dely, F, G, RHS);
 
 		calculate_Pressure_with_SOR_parallel(cartesian_handle, P, P2, RHS, imax, jmax, itermax, delx, dely, eps, omg, column, row, coords, dims, myrank, res);
-		if (myrank == 0) std::cout << "\n res = " << res << "\n";
-		//write_output_into_file_parallel("file3", cartesian_handle, myrank, coords, dims, row, U, V, P, U2, V2, imax, jmax, imax_global, jmax_global, xlength, ylength);
+
 		calculate_U_and_V_parallel(coords, dims, imax, jmax, delt, delx, dely, F, G, P, U, V);
-		//write_output_into_file_parallel("file4", cartesian_handle, myrank, coords, dims, row, U, V, P, U2, V2, imax, jmax, imax_global, jmax_global, xlength, ylength);
-		exchange_boundary_values_UV_between_processes(cartesian_handle, U, V, column, row, imax, jmax, coords, dims);
+
+		exchange_boundary_values_UV_or_FG_between_processes(cartesian_handle, U, V, column, row, imax, jmax, coords, dims);
 
 		if (t > del_vec) {
 			number_of_files += 1;
